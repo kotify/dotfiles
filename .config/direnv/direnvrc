@@ -27,7 +27,7 @@ layout_postgres() {
 	if [[ ! -d "$PGDATA" ]]; then
 		mkdir -p $PGDATA
 		chmod 0750 $PGDATA
-		LANG="C.UTF-8" LC_ALL="C.UTF-8" LC_CTYPE="C.UTF-8" initdb
+		LANG="en_US.UTF-8" LC_ALL="en_US.UTF-8" LC_CTYPE="en_US.UTF-8" initdb
 		cat >> "$PGDATA/postgresql.conf" <<-EOF
 			listen_addresses = ''
 			unix_socket_directories = '$PGHOST'
@@ -69,4 +69,27 @@ layout_redis() {
 	fi
 }
 
-# vim: noexpandtab
+# usage: `layout codeartifact aws-region mydomain owner-id myrepo`
+# on first run fetch aws codeartifact token and place it into .direnv/codeartifact_token
+# if .direnv/codeartifact_token was modified more than 9 hours ago it
+# updates it refetch token and updates the file
+# also creates in-project .npmrc with current token
+# and populate env with $CODEARTIFACT_TOKEN var
+layout_codeartifact() {
+	local tokenfile="$(direnv_layout_dir)/codeartifact_token"
+	if [ ! -f $tokenfile ] || [[ $(find $tokenfile -mmin +540 -print) ]]; then
+		local region=${1}
+		local domain=${2}
+		local owner=${3}
+		local repo=${4}
+		local token=$(aws codeartifact get-authorization-token --domain $domain --domain-owner $owner --region $region | jq -r .authorizationToken)
+		echo $token > $tokenfile
+		tee "$PWD/.npmrc" <<-EOF
+		@${repo}:registry=https://${domain}.amazonaws.com/npm/${repo}/
+		//${domain}.amazonaws.com/npm/${repo}/:always-auth=true
+		//${domain}.amazonaws.com/npm/${repo}/:${token}
+		EOF
+	fi
+	export CODEARTIFACT_TOKEN=$(cat $tokenfile)
+}
+# vim: noexpandtab ts=4

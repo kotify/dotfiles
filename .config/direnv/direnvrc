@@ -112,7 +112,7 @@ layout_codeartifact() {
 		tee "$PWD/.npmrc" <<-EOF > /dev/null
 		@${repo}:registry=https://${domain}.amazonaws.com/npm/${repo}/
 		//${domain}.amazonaws.com/npm/${repo}/:always-auth=true
-		//${domain}.amazonaws.com/npm/${repo}/:${token}
+		//${domain}.amazonaws.com/npm/${repo}/:_authToken=${token}
 		EOF
 	fi
 	watch_file "$tokenfile"

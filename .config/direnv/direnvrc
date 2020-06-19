@@ -69,27 +69,39 @@ layout_redis() {
 	fi
 }
 
-# usage: `layout codeartifact aws-region mydomain owner-id myrepo`
-# on first run fetch aws codeartifact token and place it into .direnv/codeartifact_token
-# if .direnv/codeartifact_token was modified more than 9 hours ago it
-# updates it refetch token and updates the file
-# also creates in-project .npmrc with current token
+# usage: `layout codeartifact mydomain myrepo aws-region owner-id`
+# On first run fetch aws codeartifact token and place it into .direnv/codeartifact_token
+# if .direnv/codeartifact_token was modified more than 9 hours ago then it will be updated with new token
+# Also creates in-project .npmrc with settings for `repo`
 # and populate env with $CODEARTIFACT_TOKEN var
 layout_codeartifact() {
 	local tokenfile="$(direnv_layout_dir)/codeartifact_token"
 	if [ ! -f $tokenfile ] || [[ $(find $tokenfile -mmin +540 -print) ]]; then
-		local region=${1}
-		local domain=${2}
-		local owner=${3}
-		local repo=${4}
-		local token=$(aws codeartifact get-authorization-token --domain $domain --domain-owner $owner --region $region | jq -r .authorizationToken)
+		local domain=${1}
+		local repo=${2}
+		local region=${3:-$AWS_REGION}
+		if [[ -z $domain ]] || [[ -z $repo ]] || [[ -z $region ]]; then
+			log_error "'domain', 'repo' and 'region' are required arguments."
+			return 1
+		fi
+		if [[ -z ${4} ]]; then
+			local owner=""
+		else
+			local owner="--domain-owner ${4}"
+		fi
+		log_status "refreshing codeartifact token"
+		local token=$(aws codeartifact get-authorization-token --domain $domain --region $region $owner | jq -r .authorizationToken)
+		if [[ -z $token ]]; then
+			return 1
+		fi
 		echo $token > $tokenfile
-		tee "$PWD/.npmrc" <<-EOF
+		tee "$PWD/.npmrc" <<-EOF > /dev/null
 		@${repo}:registry=https://${domain}.amazonaws.com/npm/${repo}/
 		//${domain}.amazonaws.com/npm/${repo}/:always-auth=true
 		//${domain}.amazonaws.com/npm/${repo}/:${token}
 		EOF
 	fi
+	watch_file "$tokenfile"
 	export CODEARTIFACT_TOKEN=$(cat $tokenfile)
 }
-# vim: noexpandtab ts=4
+# vim: noexpandtab ts=4 ft=sh

@@ -19,14 +19,19 @@ rawurlencode() {
 # on first run creates new postgres cluster
 # you can run `postgres` to start it and `psql` to connect
 layout_postgres() {
-	export PGDATA="$(direnv_layout_dir)/postgres"
-	export PGHOST="$PGDATA"
-	export PGHOST_ESCAPED=$(rawurlencode $PGHOST)
-	export DATABASE_URL="postgresql://$PGHOST_ESCAPED/$USER"
+	PGDATA="$(direnv_layout_dir)/postgres"
+	PGHOST="$PGDATA"
+	PGHOST_ESCAPED=$(rawurlencode "$PGHOST")
+	DATABASE_URL="postgresql://$PGHOST_ESCAPED/$USER"
+	export PGDATA
+	export PGHOST
+	export PGHOST_ESCAPED
+	export DATABASE_URL
 
 	if [[ ! -d "$PGDATA" ]]; then
-		mkdir -p $PGDATA
-		chmod 0750 $PGDATA
+		log_status "initing local postgres"
+		mkdir -p "$PGDATA"
+		chmod 0750 "$PGDATA"
 		LANG="en_US.UTF-8" LC_ALL="en_US.UTF-8" LC_CTYPE="en_US.UTF-8" initdb
 		cat >> "$PGDATA/postgresql.conf" <<-EOF
 			listen_addresses = ''
@@ -36,6 +41,7 @@ layout_postgres() {
 			full_page_writes = off
 		EOF
 		echo "CREATE DATABASE $USER;" | postgres --single -E postgres
+		echo ""
 	fi
 }
 
@@ -43,13 +49,17 @@ layout_postgres() {
 # on first run creates new redis server directory
 # you can run `redis-server $REDIS_CONFIG` to start it
 layout_redis() {
-	export REDIS_DATA="$(direnv_layout_dir)/redis"
-	export REDIS_CONFIG="$REDIS_DATA/redis.conf"
-	export REDIS_SOCKET="$REDIS_DATA/redis.sock"
+	REDIS_DATA="$(direnv_layout_dir)/redis"
+	REDIS_CONFIG="$REDIS_DATA/redis.conf"
+	REDIS_SOCKET="$REDIS_DATA/redis.sock"
+	export REDIS_DATA
+	export REDIS_CONFIG
+	export REDIS_SOCKET
 
 	if [[ ! -d "$REDIS_DATA" ]]; then
-		mkdir -p $REDIS_DATA
-		chmod 0750 $REDIS_DATA
+		log_status "initing local redis"
+		mkdir -p "$REDIS_DATA"
+		chmod 0750 "$REDIS_DATA"
 		cat >> "$REDIS_DATA/redis.conf" <<-EOF
 			bind 127.0.0.1
 			port 0
@@ -75,8 +85,10 @@ layout_redis() {
 # Also creates in-project .npmrc with settings for `repo`
 # and populate env with $CODEARTIFACT_TOKEN var
 layout_codeartifact() {
-	local tokenfile="$(direnv_layout_dir)/codeartifact_token"
-	if [ ! -f $tokenfile ] || [[ $(find $tokenfile -mmin +540 -print) ]]; then
+	local tokenfile
+	mkdir -p "$(direnv_layout_dir)"
+	tokenfile="$(direnv_layout_dir)/codeartifact_token"
+	if [ ! -f "$tokenfile" ] || [[ $(find "$tokenfile" -mmin +540 -print) ]]; then
 		local domain=${1}
 		local repo=${2}
 		local region=${3:-$AWS_REGION}
@@ -90,11 +102,13 @@ layout_codeartifact() {
 			local owner="--domain-owner ${4}"
 		fi
 		log_status "refreshing codeartifact token"
-		local token=$(aws codeartifact get-authorization-token --domain $domain --region $region $owner | jq -r .authorizationToken)
+		local token
+		# shellcheck disable=SC2086
+		token=$(aws codeartifact get-authorization-token --domain "$domain" --region "$region" $owner | jq -r .authorizationToken)
 		if [[ -z $token ]]; then
 			return 1
 		fi
-		echo $token > $tokenfile
+		echo "$token" > "$tokenfile"
 		tee "$PWD/.npmrc" <<-EOF > /dev/null
 		@${repo}:registry=https://${domain}.amazonaws.com/npm/${repo}/
 		//${domain}.amazonaws.com/npm/${repo}/:always-auth=true
@@ -102,6 +116,7 @@ layout_codeartifact() {
 		EOF
 	fi
 	watch_file "$tokenfile"
-	export CODEARTIFACT_TOKEN=$(cat $tokenfile)
+	CODEARTIFACT_TOKEN=$(cat "$tokenfile")
+	export CODEARTIFACT_TOKEN
 }
 # vim: noexpandtab ts=4 ft=sh

@@ -136,6 +136,14 @@ use_flake() {
 	watch_file flake.nix
 	watch_file flake.lock
 	eval "$(nix print-dev-env --profile "$(direnv_layout_dir)/flake-profile" 2>/dev/null | grep -E '^(export\s)?(PATH|nix_saved_PATH|NIX_)')"
+	case $(uname) in
+		Linux)
+			# https://gist.github.com/peti/2c818d6cb49b0b0f2fd7c300f8386bc3
+			local glibcLocales
+			glibcLocales=$(nix-build --no-out-link "<nixpkgs>" -A glibcLocales)
+			export LOCALE_ARCHIVE_2_27="${glibcLocales}/lib/locale/locale-archive"
+			;;
+	esac
 }
 
 # vim: noexpandtab ts=4 ft=sh sw=4

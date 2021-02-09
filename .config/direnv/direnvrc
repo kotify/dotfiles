@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 rawurlencode() {
 	local string="${1}"
 	local strlen=${#string}
@@ -146,4 +147,10 @@ use_flake() {
 	esac
 }
 
+use_devshell() {
+	watch_file devshell.toml
+	out_link="$(direnv_layout_dir)"/devshell
+	nix-build shell.nix --out-link "$out_link"
+	source "$out_link"
+}
 # vim: noexpandtab ts=4 ft=sh sw=4

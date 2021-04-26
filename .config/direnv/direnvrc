@@ -81,6 +81,13 @@ layout_redis() {
 	fi
 }
 
+layout_redis_django() {
+	layout_redis
+	export CACHE_URL=redis://$REDIS_SOCKET/0
+	export CELERY_BROKER_URL="redis+socket://$REDIS_SOCKET?virtual_host=1"
+	export CELERY_RESULT_BACKEND="redis+socket://$REDIS_SOCKET?virtual_host=2"
+}
+
 # usage: `layout codeartifact mydomain myrepo owner-id aws-region`
 # On first run fetch aws codeartifact token and place it into .direnv/codeartifact_token
 # if .direnv/codeartifact_token was modified more than 9 hours ago then it will be updated with new token
@@ -118,39 +125,27 @@ layout_codeartifact() {
 	export CODEARTIFACT_TOKEN
 }
 
-layout_fix_nix() {
-	case $(uname) in
-		Darwin)
-			export MACOSX_DEPLOYMENT_TARGET="10.15"
-			;;
-		Linux)
-			# https://gist.github.com/peti/2c818d6cb49b0b0f2fd7c300f8386bc3
-			local glibcLocales
-			glibcLocales=$(nix-build --no-out-link "<nixpkgs>" -A glibcLocales)
-			export LOCALE_ARCHIVE_2_27="${glibcLocales}/lib/locale/locale-archive"
-			;;
-	esac
-}
-
-use_flake() {
-	mkdir -p "$(direnv_layout_dir)"
-	watch_file flake.nix
-	watch_file flake.lock
-	eval "$(nix print-dev-env --profile "$(direnv_layout_dir)/flake-profile" 2>/dev/null | grep -E '^(export\s)?(PATH|nix_saved_PATH|NIX_)')"
-	case $(uname) in
-		Linux)
-			# https://gist.github.com/peti/2c818d6cb49b0b0f2fd7c300f8386bc3
-			local glibcLocales
-			glibcLocales=$(nix-build --no-out-link "<nixpkgs>" -A glibcLocales)
-			export LOCALE_ARCHIVE_2_27="${glibcLocales}/lib/locale/locale-archive"
-			;;
-	esac
-}
-
 use_devshell() {
 	watch_file devshell.toml
+	watch_file shell.nix
 	out_link="$(direnv_layout_dir)"/devshell
 	nix-build shell.nix --out-link "$out_link"
 	source "$out_link"
 }
+
+use_devshell_path() {
+	watch_file devshell.toml
+	watch_file shell.nix
+	out_link="$(direnv_layout_dir)"/devshell
+	nix-build shell.nix --out-link "$out_link"
+	# source "$out_link"
+	export PATH=$(eval $(grep -m 1 env.bash .direnv/devshell) 2&>1 /dev/null; echo $PATH)
+}
+
+use_tmux_window() {
+	if (( $(tmux list-panes | wc -l) < 2 )); then
+		tmux rename-window "$1"
+	fi
+}
+
 # vim: noexpandtab ts=4 ft=sh sw=4

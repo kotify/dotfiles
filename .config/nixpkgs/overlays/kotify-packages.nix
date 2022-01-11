@@ -26,10 +26,10 @@ self: super:
     awscli2 = self.awscli2;
     awslogs = self.awslogs;
     chamber = self.chamber;
-    packer = self.packer;
-    ssm-session-manager-plugin = self.ssm-session-manager-plugin;
+    # packer = self.packer;
+    # ssm-session-manager-plugin = self.ssm-session-manager-plugin;
     ### js
-    nodejs-14_x = self.nodejs-14_x;
+    nodejs-16_x = self.nodejs-16_x;
     npm-check-updates = self.nodePackages.npm-check-updates;
     yarn = self.yarn;
     ### python
@@ -38,8 +38,7 @@ self: super:
     isort = self.python39Packages.isort;
     pip = self.python39Packages.pip;
     pipenv = self.pipenv;
-    python27Full = (self.python2.withPackages (ps: [ ps.virtualenv ]));
-    python39Full = self.python39Full;
+    python39 = self.python39;
     tox = self.python39Packages.tox;
   } // super.lib.optionalAttrs super.stdenv.isDarwin {
     ### macos only
@@ -48,7 +47,7 @@ self: super:
     watch = self.watch;
   } // {
     ### system
-    inherit (self) cacert nixUnstable;
+    inherit (self) cacert nix;
 
     nix-rebuild = super.writeScriptBin "nix-rebuild" ''
       #!${super.stdenv.shell}

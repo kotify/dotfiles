@@ -2,6 +2,7 @@ self: super:
 
 {
   userPackages = super.userPackages or { } // {
+    ### general
     direnv = self.direnv;
     docker-compose = self.docker-compose;
     geckodriver = self.geckodriver;
@@ -13,7 +14,6 @@ self: super:
     overmind = self.overmind;
     pgformatter = self.pgformatter;
     pre-commit = self.pre-commit;
-    pspg = self.pspg;
     ripgrep = self.ripgrep;
     rsync = self.rsync;
     shellcheck = self.shellcheck;
@@ -24,22 +24,23 @@ self: super:
     amazon-ecr-credential-helper = self.amazon-ecr-credential-helper;
     aws-vault = self.aws-vault;
     awscli2 = self.awscli2;
-    awslogs = self.awslogs;
     chamber = self.chamber;
-    # packer = self.packer;
-    # ssm-session-manager-plugin = self.ssm-session-manager-plugin;
     ### js
     nodejs-16_x = self.nodejs-16_x;
     npm-check-updates = self.nodePackages.npm-check-updates;
     yarn = self.yarn;
+    pnpm = self.nodePackages.pnpm;
     ### python
     black = self.black;
     flake8 = self.python39Packages.flake8;
     isort = self.python39Packages.isort;
     pip = self.python39Packages.pip;
-    pipenv = self.pipenv;
     python39 = self.python39;
     tox = self.python39Packages.tox;
+  } // super.lib.optionalAttrs (super.stdenv.isx86_64 || !super.stdenv.isDarwin) {
+    ### broken on Apple Silicon
+    packer = self.packer;
+    ssm-session-manager-plugin = self.ssm-session-manager-plugin;
   } // super.lib.optionalAttrs super.stdenv.isDarwin {
     ### macos only
     chromedriver = self.chromedriver;

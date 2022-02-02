@@ -6,14 +6,6 @@ use_devshell() {
 	source "$out_link/env.bash"
 }
 
-use_devshell_path() {
-	watch_file devshell.toml
-	watch_file shell.nix
-	out_link="$(direnv_layout_dir)"/devshell
-	nix-build shell.nix --out-link "$out_link"
-	export PATH=$(eval .direnv/devshell/env.bash 2&>1 /dev/null; echo $PATH)
-}
-
 use_tmux_window() {
 	if (( $(tmux list-panes | wc -l) < 2 )); then
 		tmux rename-window "$1"

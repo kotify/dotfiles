@@ -36,7 +36,6 @@ self: super:
     isort = self.python39Packages.isort;
     pip = self.python39Packages.pip;
     python39 = self.python39;
-    tox = self.python39Packages.tox;
   } // super.lib.optionalAttrs (super.stdenv.isx86_64 || !super.stdenv.isDarwin) {
     ### broken on Apple Silicon
     packer = self.packer;

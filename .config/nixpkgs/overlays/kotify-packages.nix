@@ -36,13 +36,18 @@ self: super:
     isort = self.python39Packages.isort;
     pip = self.python39Packages.pip;
     python39 = self.python39;
+    chromedriver = super.chromedriver.overrideAttrs (oldAttrs: {
+      # in original deriviation linux version is linked to dependencies
+      # that leads to installation of lot's of basic linux libraries
+      # we skip that and just use original binary as we do on macos
+      installPhase = "install -m755 -D chromedriver $out/bin/chromedriver";
+    });
   } // super.lib.optionalAttrs (super.stdenv.isx86_64 || !super.stdenv.isDarwin) {
     ### broken on Apple Silicon
     packer = self.packer;
     ssm-session-manager-plugin = self.ssm-session-manager-plugin;
   } // super.lib.optionalAttrs super.stdenv.isDarwin {
     ### macos only
-    chromedriver = self.chromedriver;
     reattach-to-user-namespace = self.reattach-to-user-namespace;
     watch = self.watch;
   } // {

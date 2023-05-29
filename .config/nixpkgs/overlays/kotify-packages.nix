@@ -25,24 +25,26 @@ self: super:
     aws-vault = self.aws-vault;
     awscli2 = self.awscli2;
     chamber = self.chamber;
+    packer = self.packer;
     ### js
-    nodejs-16_x = self.nodejs-16_x;
+    nodejs-18_x = self.nodejs-18_x;
     npm-check-updates = self.nodePackages.npm-check-updates;
     yarn = self.yarn;
     pnpm = self.nodePackages.pnpm;
     ### python
     black = self.black;
-    flake8 = self.python39Packages.flake8;
-    isort = self.python39Packages.isort;
-    pip = self.python39Packages.pip;
-    python39 = self.python39;
+    flake8 = self.python310Packages.flake8;
+    isort = self.python310Packages.isort;
+    pip = self.python310Packages.pip;
+    python310 = self.python310;
+    chromedriver = super.chromedriver.overrideAttrs (oldAttrs: {
+      installPhase = "install -m755 -D chromedriver $out/bin/chromedriver";
+    });
   } // super.lib.optionalAttrs (super.stdenv.isx86_64 || !super.stdenv.isDarwin) {
     ### broken on Apple Silicon
-    packer = self.packer;
     ssm-session-manager-plugin = self.ssm-session-manager-plugin;
   } // super.lib.optionalAttrs super.stdenv.isDarwin {
     ### macos only
-    chromedriver = self.chromedriver;
     reattach-to-user-namespace = self.reattach-to-user-namespace;
     watch = self.watch;
   } // {

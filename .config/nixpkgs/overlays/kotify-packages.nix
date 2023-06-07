@@ -21,6 +21,7 @@ self: super:
     tmux = self.tmux;
     watchman = self.watchman;
     ### cloud
+    ssm-session-manager-plugin = self.ssm-session-manager-plugin;
     amazon-ecr-credential-helper = self.amazon-ecr-credential-helper;
     aws-vault = self.aws-vault;
     awscli2 = self.awscli2;
@@ -40,9 +41,6 @@ self: super:
     chromedriver = super.chromedriver.overrideAttrs (oldAttrs: {
       installPhase = "install -m755 -D chromedriver $out/bin/chromedriver";
     });
-  } // super.lib.optionalAttrs (super.stdenv.isx86_64 || !super.stdenv.isDarwin) {
-    ### broken on Apple Silicon
-    ssm-session-manager-plugin = self.ssm-session-manager-plugin;
   } // super.lib.optionalAttrs super.stdenv.isDarwin {
     ### macos only
     reattach-to-user-namespace = self.reattach-to-user-namespace;

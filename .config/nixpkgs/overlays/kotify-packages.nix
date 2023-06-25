@@ -12,7 +12,6 @@ self: super:
     htop = self.htop;
     jq = self.jq;
     overmind = self.overmind;
-    pgformatter = self.pgformatter;
     pre-commit = self.pre-commit;
     ripgrep = self.ripgrep;
     rsync = self.rsync;
@@ -29,13 +28,10 @@ self: super:
     packer = self.packer;
     ### js
     nodejs-18_x = self.nodejs-18_x;
-    npm-check-updates = self.nodePackages.npm-check-updates;
-    yarn = self.yarn;
     pnpm = self.nodePackages.pnpm;
     ### python
     black = self.black;
-    flake8 = self.python310Packages.flake8;
-    isort = self.python310Packages.isort;
+    ruff = self.ruff;
     pip = self.python310Packages.pip;
     python310 = self.python310;
     chromedriver = super.chromedriver.overrideAttrs (oldAttrs: {
@@ -45,6 +41,7 @@ self: super:
     ### macos only
     reattach-to-user-namespace = self.reattach-to-user-namespace;
     watch = self.watch;
+    tree = self.tree;
   } // {
     ### system
     inherit (self) cacert nix;

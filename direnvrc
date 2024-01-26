@@ -1,0 +1,25 @@
+layout_clamav() {
+	CLAMAV_DIR="${CLAMAV_DIR-$(direnv_layout_dir)/clamav}"
+	CLAMAV_DATABASE="${CLAMAV_DATABASE-$CLAMAV_DIR/database}"
+	export FRESHCLAM_CONFIG="${FRESHCLAM_CONFIG-$CLAMAV_DIR/freshclam.conf}"
+	export CLAMD_CONFIG="${CLAMD_CONFIG-$CLAMAV_DIR/clamd.conf}"
+	export CLAMD_SOCKET="${CLAMD_SOCKET-$CLAMAV_DIR/clamd.sock}"
+	if [[ ! -d "$CLAMAV_DIR" ]]; then
+		log_status "initing local clamav"
+		mkdir -p "$CLAMAV_DIR"
+		chmod 0750 "$CLAMAV_DIR"
+		mkdir -p "$CLAMAV_DATABASE"
+		chmod 0750 "$CLAMAV_DATABASE"
+		cat >> "$FRESHCLAM_CONFIG" <<-EOF
+			DatabaseDirectory $CLAMAV_DATABASE
+			PidFile $CLAMAV_DIR/freshclam.pid
+			DatabaseMirror database.clamav.net
+		EOF
+		cat >> "$CLAMD_CONFIG" <<-EOF
+			DatabaseDirectory $CLAMAV_DATABASE
+			PidFile $CLAMAV_DIR/clamd.pid
+			LocalSocket $CLAMD_SOCKET
+			StreamMaxLength 150M
+		EOF
+	fi
+}
